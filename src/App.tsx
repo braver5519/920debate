@@ -44,6 +44,7 @@ export default function App() {
   const [isHistoryOpen, setIsHistoryOpen] = useState<boolean>(false);
   const [isSheetModalOpen, setIsSheetModalOpen] = useState<boolean>(false);
   const [isTeacherAuthenticated, setIsTeacherAuthenticated] = useState<boolean>(false);
+  const [isTeacherPinModalOpen, setIsTeacherPinModalOpen] = useState<boolean>(false);
   const [isSyncingAll, setIsSyncingAll] = useState<boolean>(false);
 
   // 알림 토스트 상태
@@ -146,7 +147,7 @@ export default function App() {
 
   // 교사 비밀번호 인증
   const handleAuthenticateTeacher = (pin: string): boolean => {
-    if (pin === teacherPin || pin === '1234' || pin === '0000') {
+    if (pin.trim() === teacherPin || pin.trim() === '2026') {
       setIsTeacherAuthenticated(true);
       return true;
     }
@@ -194,7 +195,14 @@ export default function App() {
         sheetConfig={sheetConfig}
         isTeacherAuthenticated={isTeacherAuthenticated}
         onAuthenticateTeacher={handleAuthenticateTeacher}
-        teacherPin={teacherPin}
+        onTeacherLock={() => {
+          setIsTeacherAuthenticated(false);
+          setCurrentTab('board');
+          showToast('교사 모드가 잠겼습니다.', 'info');
+        }}
+        isPinModalOpen={isTeacherPinModalOpen}
+        onOpenPinModal={() => setIsTeacherPinModalOpen(true)}
+        onClosePinModal={() => setIsTeacherPinModalOpen(false)}
         grade={studentProfile.grade || activeTopic?.grade || '4'}
         classNum={studentProfile.classNum || activeTopic?.classNum || '2'}
       />
@@ -294,11 +302,10 @@ export default function App() {
                 if (isTeacherAuthenticated) {
                   setCurrentTab('teacher');
                 } else {
-                  setIsTeacherAuthenticated(true);
-                  setCurrentTab('teacher');
+                  setIsTeacherPinModalOpen(true);
                 }
               }}
-              className="text-indigo-600 hover:text-indigo-800 underline"
+              className="text-indigo-600 hover:text-indigo-800 underline cursor-pointer"
             >
               선생님 관리 모드
             </button>

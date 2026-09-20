@@ -136,7 +136,16 @@ export const storage = {
   },
 
   getTeacherPin(): string {
-    return localStorage.getItem(STORAGE_KEYS.TEACHER_PIN) || '1234';
+    const pin = localStorage.getItem(STORAGE_KEYS.TEACHER_PIN);
+    if (!pin || pin === '1234') {
+      try {
+        localStorage.setItem(STORAGE_KEYS.TEACHER_PIN, '2026');
+      } catch {
+        // ignore
+      }
+      return '2026';
+    }
+    return pin;
   },
 
   saveTeacherPin(pin: string): void {

@@ -22,9 +22,12 @@ interface NavbarProps {
   sheetConfig: GoogleSheetConfig;
   isTeacherAuthenticated: boolean;
   onAuthenticateTeacher: (pin: string) => boolean;
-  teacherPin: string;
+  onTeacherLock?: () => void;
   grade: string;
   classNum: string;
+  isPinModalOpen?: boolean;
+  onOpenPinModal?: () => void;
+  onClosePinModal?: () => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -35,39 +38,53 @@ export const Navbar: React.FC<NavbarProps> = ({
   sheetConfig,
   isTeacherAuthenticated,
   onAuthenticateTeacher,
-  teacherPin,
+  onTeacherLock,
   grade,
-  classNum
+  classNum,
+  isPinModalOpen,
+  onOpenPinModal,
+  onClosePinModal
 }) => {
-  const [showPinModal, setShowPinModal] = useState(false);
+  const [internalPinModal, setInternalPinModal] = useState(false);
   const [pinInput, setPinInput] = useState('');
   const [pinError, setPinError] = useState(false);
+
+  const showPinModal = isPinModalOpen !== undefined ? isPinModalOpen : internalPinModal;
+  const setShowPinModal = (open: boolean) => {
+    if (open) {
+      if (onOpenPinModal) onOpenPinModal();
+      else setInternalPinModal(true);
+    } else {
+      if (onClosePinModal) onClosePinModal();
+      else setInternalPinModal(false);
+    }
+  };
 
   const handleTeacherTabClick = () => {
     if (isTeacherAuthenticated) {
       onSelectTab('teacher');
     } else {
-      setShowPinModal(true);
       setPinInput('');
       setPinError(false);
+      setShowPinModal(true);
     }
   };
 
   const handlePinSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const success = onAuthenticateTeacher(pinInput);
+    if (!pinInput.trim()) {
+      setPinError(true);
+      return;
+    }
+    const success = onAuthenticateTeacher(pinInput.trim());
     if (success) {
       setShowPinModal(false);
+      setPinInput('');
+      setPinError(false);
       onSelectTab('teacher');
     } else {
       setPinError(true);
     }
-  };
-
-  const handleQuickBypass = () => {
-    onAuthenticateTeacher(teacherPin);
-    setShowPinModal(false);
-    onSelectTab('teacher');
   };
 
   return (
@@ -173,6 +190,19 @@ export const Navbar: React.FC<NavbarProps> = ({
               <span>교사 모드</span>
             </button>
 
+            {/* 교사 모드 활성화 시 잠금 버튼 */}
+            {isTeacherAuthenticated && onTeacherLock && (
+              <button
+                type="button"
+                onClick={onTeacherLock}
+                title="교사 모드 잠금 (학생 화면으로 전환)"
+                className="px-2.5 py-2 rounded-2xl text-xs font-bold text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-colors flex items-center gap-1 cursor-pointer"
+              >
+                <Lock className="w-3.5 h-3.5 text-slate-600" />
+                <span className="hidden sm:inline text-[11px]">잠금</span>
+              </button>
+            )}
+
           </div>
         </div>
       </header>
@@ -180,17 +210,17 @@ export const Navbar: React.FC<NavbarProps> = ({
       {/* 교사용 비밀번호 확인 모달 */}
       {showPinModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
-          <div className="bg-white w-full max-w-sm rounded-3xl p-6 shadow-2xl border border-slate-200 text-center space-y-4">
-            <div className="w-14 h-14 bg-indigo-100 text-indigo-600 rounded-2xl flex items-center justify-center mx-auto shadow-inner">
-              <KeyRound className="w-7 h-7" />
+          <div className="bg-white w-full max-w-sm rounded-3xl p-6 shadow-2xl border border-slate-200 text-center space-y-4 animate-in fade-in zoom-in-95 duration-200">
+            <div className="w-14 h-14 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center mx-auto border border-indigo-100 shadow-inner">
+              <Lock className="w-7 h-7" />
             </div>
 
             <div>
               <h3 className="text-lg font-bold text-slate-900">
-                선생님 전용 비밀번호 입력
+                선생님 비밀번호 확인
               </h3>
               <p className="text-xs text-slate-500 mt-1">
-                학급 관리 대시보드에 접근하려면 비밀번호를 입력해 주세요. (초기 비밀번호: <strong>1234</strong>)
+                교사 모드에 접속하려면 비밀번호를 입력해 주세요.
               </p>
             </div>
 
@@ -198,20 +228,20 @@ export const Navbar: React.FC<NavbarProps> = ({
               <input
                 id="teacher-pin-input"
                 type="password"
-                maxLength={8}
+                maxLength={20}
                 autoFocus
                 value={pinInput}
                 onChange={(e) => {
                   setPinInput(e.target.value);
                   setPinError(false);
                 }}
-                placeholder="비밀번호 4자리 (1234)"
+                placeholder="비밀번호 입력"
                 className="w-full text-center text-xl font-mono tracking-widest px-4 py-3 rounded-2xl border-2 border-slate-300 focus:border-indigo-600 focus:outline-none"
               />
 
               {pinError && (
                 <div className="text-xs text-rose-600 font-bold">
-                  비밀번호가 일치하지 않습니다. (기본값: 1234)
+                  비밀번호가 올바르지 않습니다.
                 </div>
               )}
 
@@ -219,26 +249,15 @@ export const Navbar: React.FC<NavbarProps> = ({
                 <button
                   type="button"
                   onClick={() => setShowPinModal(false)}
-                  className="flex-1 py-3 rounded-xl border border-slate-300 text-xs font-bold text-slate-600"
+                  className="flex-1 py-3 rounded-xl border border-slate-300 text-xs font-bold text-slate-600 hover:bg-slate-50 cursor-pointer transition-colors"
                 >
                   취소
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold shadow-xs"
+                  className="flex-1 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold shadow-xs cursor-pointer transition-colors"
                 >
                   확인
-                </button>
-              </div>
-
-              {/* 편리한 원클릭 바로 들어가기 버튼 */}
-              <div className="pt-2 border-t border-slate-100">
-                <button
-                  type="button"
-                  onClick={handleQuickBypass}
-                  className="text-xs text-indigo-600 hover:text-indigo-800 font-bold underline cursor-pointer"
-                >
-                  👉 비밀번호 없이 교사 모드로 바로 들어가기
                 </button>
               </div>
             </form>
