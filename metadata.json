@@ -1,0 +1,6 @@
+{
+  "name": "우리반 토의 의견 나눔판",
+  "description": "초등학생과 선생님을 위한 실시간 학급 토의 의견 수렴, 의견 분포 그래프 및 구글 시트 연동 대시보드",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
