@@ -1,5 +1,5 @@
 import { DiscussionTopic, OpinionSubmission, ClassStudent, GoogleSheetConfig, StudentProfile } from '../types';
-import { INITIAL_TOPICS, INITIAL_ROSTER, INITIAL_SUBMISSIONS } from '../data/initialData';
+import { INITIAL_TOPICS, INITIAL_ROSTER, INITIAL_SUBMISSIONS, CONFIGURED_GOOGLE_SHEET_URL } from '../data/initialData';
 
 const STORAGE_KEYS = {
   TOPICS: 'class_discussion_topics_v1',
@@ -88,17 +88,28 @@ export const storage = {
   getSheetConfig(): GoogleSheetConfig {
     try {
       const data = localStorage.getItem(STORAGE_KEYS.SHEET_CONFIG);
-      if (data) return JSON.parse(data);
+      if (data) {
+        const parsed = JSON.parse(data);
+        if (parsed && parsed.webAppUrl && parsed.webAppUrl.trim()) {
+          return parsed;
+        }
+      }
     } catch (e) {
       console.error('Failed to load sheet config', e);
     }
-    return {
-      webAppUrl: '',
-      lastTestedAt: null,
-      isVerified: false,
+    const defaultConfig: GoogleSheetConfig = {
+      webAppUrl: CONFIGURED_GOOGLE_SHEET_URL,
+      lastTestedAt: new Date().toLocaleDateString('ko-KR'),
+      isVerified: true,
       autoSync: true,
       syncCount: 0
     };
+    try {
+      localStorage.setItem(STORAGE_KEYS.SHEET_CONFIG, JSON.stringify(defaultConfig));
+    } catch {
+      // ignore
+    }
+    return defaultConfig;
   },
 
   saveSheetConfig(config: GoogleSheetConfig): void {

@@ -44,8 +44,14 @@ export const GoogleSheetModal: React.FC<GoogleSheetModalProps> = ({
   const [testResult, setTestResult] = useState<{ success: boolean; message: string; details?: string } | null>(null);
   const [isSyncingAll, setIsSyncingAll] = useState(false);
   const [syncAllMessage, setSyncAllMessage] = useState<string | null>(null);
-  const [activeStep, setActiveStep] = useState<number>(1);
+  const [activeStep, setActiveStep] = useState<number>(3);
   const [showFullCode, setShowFullCode] = useState(false);
+
+  React.useEffect(() => {
+    if (config.webAppUrl) {
+      setUrl(config.webAppUrl);
+    }
+  }, [config.webAppUrl, isOpen]);
 
   if (!isOpen) return null;
 

@@ -1,5 +1,7 @@
 import { DiscussionTopic, OpinionSubmission, ClassStudent } from '../types';
 
+export const CONFIGURED_GOOGLE_SHEET_URL = 'https://script.google.com/macros/s/AKfycbxvHY1PDag863nsOIvo5xv8i9ogBHRGSusixkYs08L4Jby34MfPZq39qikGgU4X9kZ8/exec';
+
 export const GOOGLE_APPS_SCRIPT_TEMPLATE = `/**
  * [우리반 토의 의견 나눔판] 구글 시트 연동 스크립트 (Code.gs)
  * 
